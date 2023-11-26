@@ -138,6 +138,21 @@ export class RestAPIStack extends cdk.Stack {
       }
     );
 
+    const getReviewsByYearFn = new lambdanode.NodejsFunction(this, "GetReviewsByYearFn",
+      {
+        architecture: lambda.Architecture.ARM_64,
+        runtime: lambda.Runtime.NODEJS_16_X,
+        entry: `${__dirname}/../lambdas/getReviewsByYear.ts`,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 128,
+        environment: {
+          TABLE_NAME: reviewsTable.tableName,
+          REGION: 'eu-west-1',
+        },
+      }
+    );
+
+
     const newReviewFn = new lambdanode.NodejsFunction(this, "AddReviewFn", {
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_16_X,
@@ -151,15 +166,15 @@ export class RestAPIStack extends cdk.Stack {
     });
 
     // Translate
-    // const getTranslatedReviewFn = new NodejsFunction(this, "GetTranslatedReviewFn", {
-    //   entry: `${__dirname}/../lambdas/getTranslatedReview.ts`,
-    //   handler: "handler",
-    //   runtime: lambda.Runtime.NODEJS_14_X,
-    //   environment: {
-    //     TABLE_NAME: reviewsTable.tableName,
-    //     REGION: "eu-west-1",
-    //   },
-    // });
+    const getTranslatedReviewFn = new NodejsFunction(this, "GetTranslatedReviewFn", {
+      entry: `${__dirname}/../lambdas/getTranslatedReview.ts`,
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_14_X,
+      environment: {
+        TABLE_NAME: reviewsTable.tableName,
+        REGION: "eu-west-1",
+      },
+    });
 
     new custom.AwsCustomResource(this, "moviesddbInitData", {
       onCreate: {
@@ -183,12 +198,13 @@ export class RestAPIStack extends cdk.Stack {
     moviesTable.grantReadData(getMovieByIdFn)
     moviesTable.grantReadData(getAllMoviesFn)
     moviesTable.grantReadWriteData(newMovieFn)
-//    moviesTable.grantReadData(getTranslatedReviewFn);
+    moviesTable.grantReadData(getTranslatedReviewFn);
 
     // Reviews
     reviewsTable.grantReadData(getReviewsByMovieIdFn)
     reviewsTable.grantReadData(getReviewByReviewerFn)
     reviewsTable.grantReadData(getReviewsByReviewerFn)
+    reviewsTable.grantReadData(getReviewsByYearFn)
     reviewsTable.grantReadWriteData(newReviewFn)
 
     const api = new apig.RestApi(this, "RestAPI", {
@@ -228,12 +244,11 @@ export class RestAPIStack extends cdk.Stack {
     const generalReviewsEndpoint = api.root.addResource("reviews");
     generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(newReviewFn, { proxy: true }));
 
+    const reviewsByYearEndpoint = singleMovieEndpoint.addResource("{year}");
+    reviewsByYearEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByYearFn));
+
     // Translate
-    // const translateReviewEndpoint = reviewByReviewerEndpoint.addResource("translation");
-    // translateReviewEndpoint.addMethod("GET", new apig.LambdaIntegration(getTranslatedReviewFn, {
-    //   requestParameters: {
-    //     "method.request.querystring.language": "method.request.querystring.language",
-    //   },
-    // }));
+    const translateReviewEndpoint = reviewByReviewerEndpoint.addResource("translation");
+    translateReviewEndpoint.addMethod("GET", new apig.LambdaIntegration(getTranslatedReviewFn));
   }
 }
