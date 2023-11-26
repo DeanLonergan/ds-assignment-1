@@ -13,7 +13,7 @@ e.g.
 - [ ] Implemented
 - [ ] Recorded
 + GET /movies/{movieId}/reviews - Get all the reviews for a movie with the specified id.
-- [ ] Implemented
+- [x] Implemented
 - [ ] Recorded
 + GET /movies/{movieId}/reviews?minRating=n - Get all the reviews for the movie with the specified ID with a rating greater than the minRating.
 - [ ] Implemented

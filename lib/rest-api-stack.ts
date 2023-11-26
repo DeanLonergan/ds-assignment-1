@@ -87,6 +87,35 @@ export class RestAPIStack extends cdk.Stack {
       },
     });
 
+    // Reviews
+    const getReviewsByMovieIdFn = new lambdanode.NodejsFunction(
+      this,
+      "GetReviewByMovieIdFn",
+      {
+        architecture: lambda.Architecture.ARM_64,
+        runtime: lambda.Runtime.NODEJS_16_X,
+        entry: `${__dirname}/../lambdas/getReviewByMovieId.ts`,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 128,
+        environment: {
+          TABLE_NAME: reviewsTable.tableName,
+          REGION: 'eu-west-1',
+        },
+      }
+    );
+
+    const newReviewFn = new lambdanode.NodejsFunction(this, "AddReviewFn", {
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_16_X,
+      entry: `${__dirname}/../lambdas/addReview.ts`,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        TABLE_NAME: reviewsTable.tableName,
+        REGION: "eu-west-1",
+      },
+    });
+
     new custom.AwsCustomResource(this, "moviesddbInitData", {
       onCreate: {
         service: "DynamoDB",
@@ -104,23 +133,6 @@ export class RestAPIStack extends cdk.Stack {
       }),
     });
 
-    // Reviews
-    const getReviewByMovieIdFn = new lambdanode.NodejsFunction(
-      this,
-      "GetReviewByMovieIdFn",
-      {
-        architecture: lambda.Architecture.ARM_64,
-        runtime: lambda.Runtime.NODEJS_16_X,
-        entry: `${__dirname}/../lambdas/getReviewByMovieId.ts`,
-        timeout: cdk.Duration.seconds(10),
-        memorySize: 128,
-        environment: {
-          TABLE_NAME: reviewsTable.tableName,
-          REGION: 'eu-west-1',
-        },
-      }
-    );
-
     // Permissions
     // Movies
     moviesTable.grantReadData(getMovieByIdFn)
@@ -128,7 +140,8 @@ export class RestAPIStack extends cdk.Stack {
     moviesTable.grantReadWriteData(newMovieFn)
 
     //  Reviews
-    reviewsTable.grantReadData(getReviewByMovieIdFn)
+    reviewsTable.grantReadData(getReviewsByMovieIdFn)
+    reviewsTable.grantReadWriteData(newReviewFn)
 
     const api = new apig.RestApi(this, "RestAPI", {
       description: "demo api",
@@ -168,10 +181,15 @@ export class RestAPIStack extends cdk.Stack {
     );
 
     // Reviews
-    const reviewEndpoint = movieEndpoint.addResource("reviews");
-    reviewEndpoint.addMethod(
+    const reviewsEndpoint = movieEndpoint.addResource("reviews");
+    reviewsEndpoint.addMethod(
       "GET",
-      new apig.LambdaIntegration(getReviewByMovieIdFn, { proxy: true })
+      new apig.LambdaIntegration(getReviewsByMovieIdFn, { proxy: true })
+    );
+
+    reviewsEndpoint.addMethod(
+      "POST",
+      new apig.LambdaIntegration(newReviewFn, { proxy: true })
     );
   }
 }
