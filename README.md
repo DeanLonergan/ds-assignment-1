@@ -27,8 +27,8 @@ This repository contains the implementation of a serverless REST API for the AWS
 - [ ] Recorded
 
 + GET /movies/reviews/{reviewerName} - Get all the reviews written by a specific reviewer.
-- [x] Implemented*
-- [ ] Recorded
+- [x] Implemented
+- [x] Recorded
 
 + GET /movies/{movieId}/reviews/{reviewerName}/translation?language=code - Get a translated version of the review for the movie with the specified movie ID and written by the named reviewer.
 - [ ] Implemented
@@ -44,7 +44,10 @@ This repository contains the implementation of a serverless REST API for the AWS
 
 [Include a screenshot from the AWS console (Cognito User Pools) showing a confirmed user account.]
 
-![](./images/pool.png)
+![](./images/userpool.png)
+
+- [x] Implemented
+- [x] Recorded
 
 ### Independent learning (If relevant).
 
