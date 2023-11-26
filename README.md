@@ -23,7 +23,7 @@ This repository contains the implementation of a serverless REST API for the AWS
 - [x] Recorded
 
 + GET /movies/{movieId}/reviews/{year} - Get the review(s) for the movie with the specified movie ID and were written in a specified year.
-- [ ] Implemented
+- [x] Implemented*
 - [ ] Recorded
 
 + GET /movies/reviews/{reviewerName} - Get all the reviews written by a specific reviewer.
@@ -31,18 +31,23 @@ This repository contains the implementation of a serverless REST API for the AWS
 - [x] Recorded
 
 + GET /movies/{movieId}/reviews/{reviewerName}/translation?language=code - Get a translated version of the review for the movie with the specified movie ID and written by the named reviewer.
-- [ ] Implemented
+- [x] Implemented*
 - [ ] Recorded
 
-[Include screenshots from the AWS console (API Gateway service) that clearly show the deployed API ( have legible font size). ]
++ Auth API
+![](./images/authapi.png)
 
-![](./images/api1.png)
++ Rest API
+![](./images/restapi1.png)
+![](./images/restapi2.png)
 
-![](./images/api1.png)
++ Movies table
+![](./images/moviestable.png)
+
++ Reviews table
+![](./images/reviewstable.png)
 
 ### Authentication..
-
-[Include a screenshot from the AWS console (Cognito User Pools) showing a confirmed user account.]
 
 ![](./images/userpool.png)
 
@@ -51,8 +56,6 @@ This repository contains the implementation of a serverless REST API for the AWS
 
 ### Independent learning (If relevant).
 
-[ Briefly explain any aspects of your submission that required independent research and learning, i.e. not covered in the lectures/labs. State the files that have evidence of this.
-
-
-State any other evidence of independent learning achieved while completing this assignment.
-
+Made an attempt at the translation API. Made use of the following:
+https://completecoding.io/typescript-translation-api/
+https://docs.aws.amazon.com/translate/latest/dg/what-is.html
