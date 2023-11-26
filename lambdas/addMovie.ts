@@ -10,11 +10,11 @@ const isValidBodyParams = ajv.compile(schema.definitions["Movie"] || {});
 const ddbDocClient = createDDbDocClient();
 
 export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
-  try {
-    // Print Event
-    console.log("Event: ", event);
-    const body = event.body ? JSON.parse(event.body) : undefined;
-    if (!body) {
+    try {
+        // Print Event
+        console.log("Event: ", event);
+        const body = event.body ? JSON.parse(event.body) : undefined;
+        if (!body) {
             return {
                 statusCode: 500,
                 headers: {
@@ -26,18 +26,18 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
 
         if (!isValidBodyParams(body)) {
             return {
-              statusCode: 500,
-              headers: {
-                "content-type": "application/json",
-              },
-              body: JSON.stringify({
-                message: `Incorrect type. Must match Movie schema`,
-                schema: schema.definitions["Movie"],
-              }),
+                statusCode: 500,
+                headers: {
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    message: `Incorrect type. Must match Movie schema`,
+                    schema: schema.definitions["Movie"],
+                }),
             };
-          }
+        }
 
-          const commandOutput = await ddbDocClient.send(
+        const commandOutput = await ddbDocClient.send(
             new PutCommand({
                 TableName: process.env.TABLE_NAME,
                 Item: body,
