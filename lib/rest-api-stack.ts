@@ -8,6 +8,7 @@ import { Construct } from "constructs";
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { generateBatch } from "../shared/util";
 import { movies } from "../seed/movies";
+import { reviews } from "../seed/reviews";
 
 export class RestAPIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -21,7 +22,15 @@ export class RestAPIStack extends cdk.Stack {
       tableName: "Movies",
     });
 
+    const reviewsTable = new dynamodb.Table(this, "ReviewsTable", {
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      partitionKey: { name: "movieId", type: dynamodb.AttributeType.NUMBER },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: "Reviews",
+    });
+
     // Functions 
+    // Movies
     const getMovieByIdFn = new lambdanode.NodejsFunction(
       this,
       "GetMovieByIdFn",
@@ -85,19 +94,41 @@ export class RestAPIStack extends cdk.Stack {
         parameters: {
           RequestItems: {
             [moviesTable.tableName]: generateBatch(movies),
+            [reviewsTable.tableName]: generateBatch(reviews),
           },
         },
-        physicalResourceId: custom.PhysicalResourceId.of("moviesddbInitData"), //.of(Date.now().toString()),
+        physicalResourceId: custom.PhysicalResourceId.of("moviesddbInitData"),
       },
       policy: custom.AwsCustomResourcePolicy.fromSdkCalls({
-        resources: [moviesTable.tableArn],
+        resources: [moviesTable.tableArn, reviewsTable.tableArn],
       }),
     });
 
-    // Permissions 
+    // Reviews
+    const getReviewByMovieIdFn = new lambdanode.NodejsFunction(
+      this,
+      "GetReviewByMovieIdFn",
+      {
+        architecture: lambda.Architecture.ARM_64,
+        runtime: lambda.Runtime.NODEJS_16_X,
+        entry: `${__dirname}/../lambdas/getReviewByMovieId.ts`,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 128,
+        environment: {
+          TABLE_NAME: reviewsTable.tableName,
+          REGION: 'eu-west-1',
+        },
+      }
+    );
+
+    // Permissions
+    // Movies
     moviesTable.grantReadData(getMovieByIdFn)
     moviesTable.grantReadData(getAllMoviesFn)
     moviesTable.grantReadWriteData(newMovieFn)
+
+    //  Reviews
+    reviewsTable.grantReadData(getReviewByMovieIdFn)
 
     const api = new apig.RestApi(this, "RestAPI", {
       description: "demo api",
@@ -112,7 +143,8 @@ export class RestAPIStack extends cdk.Stack {
         allowOrigins: ["*"],
       },
     });
-
+    
+    // Movies
     const moviesEndpoint = api.root.addResource("movies");
     moviesEndpoint.addMethod(
       "GET",
@@ -133,6 +165,13 @@ export class RestAPIStack extends cdk.Stack {
     movieEndpoint.addMethod(
       "DELETE",
       new apig.LambdaIntegration(deleteMovieFn, { proxy: true })
+    );
+
+    // Reviews
+    const reviewEndpoint = movieEndpoint.addResource("reviews");
+    reviewEndpoint.addMethod(
+      "GET",
+      new apig.LambdaIntegration(getReviewByMovieIdFn, { proxy: true })
     );
   }
 }

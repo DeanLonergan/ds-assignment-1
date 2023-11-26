@@ -10,11 +10,26 @@ This repository contains the implementation of a serverless REST API for the AWS
 e.g.
  
 + POST /movies/reviews - add a movie review.
+- [ ] Implemented
+- [ ] Recorded
 + GET /movies/{movieId}/reviews - Get all the reviews for a movie with the specified id.
+- [ ] Implemented
+- [ ] Recorded
 + GET /movies/{movieId}/reviews?minRating=n - Get all the reviews for the movie with the specified ID with a rating greater than the minRating.
+- [ ] Implemented
+- [ ] Recorded
 + GET /movies/{movieId}/reviews/{reviewerName} - Get the review for the movie with the specified movie ID and written by the named reviewer.
-+ etc
-+ etc
+- [ ] Implemented
+- [ ] Recorded
++ GET /movies/{movieId}/reviews/{year} - Get the review(s) for the movie with the specified movie ID and were written in a specified year.
+- [ ] Implemented
+- [ ] Recorded
++ GET /movies/reviews/{reviewerName} - Get all the reviews written by a specific reviewer.
+- [ ] Implemented
+- [ ] Recorded
++ GET /movies/{movieId}/reviews/{reviewerName}/translation?language=code - Get a translated version of the review for the movie with the specified movie ID and written by the named reviewer.
+- [ ] Implemented
+- [ ] Recorded
 
 [Include screenshots from the AWS console (API Gateway service) that clearly show the deployed API ( have legible font size). ]
 

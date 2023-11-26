@@ -1,6 +1,6 @@
-import {Movie} from '../shared/types'
+import { Movie } from '../shared/types'
 
-export const movies : Movie[] = [
+export const movies: Movie[] = [
   {
     movieId: 1234,
     genre_ids: [28, 14, 32],
