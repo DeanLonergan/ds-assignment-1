@@ -1,16 +1,13 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
-
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient();
 
 export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
   try {
     console.log("Event: ", event);
-    // const parameters = event?.queryStringParameters;
-    // const movieId = parameters ? parseInt(parameters.movieId) : undefined;
-    const parameters  = event?.pathParameters;
+    const parameters = event?.pathParameters;
     const movieId = parameters?.movieId ? parseInt(parameters.movieId) : undefined;
 
     if (!movieId) {
@@ -19,31 +16,36 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
         headers: {
           "content-type": "application/json",
         },
-        body: JSON.stringify({ Message: "Missing movie Id" }),
+        body: JSON.stringify({ Message: "Missing movieId" }),
       };
     }
 
     const commandOutput = await ddbDocClient.send(
-      new GetCommand({
+      new QueryCommand({
         TableName: process.env.TABLE_NAME,
-        Key: { movieId: movieId },
+        KeyConditionExpression: "movieId = :movieId",
+        ExpressionAttributeValues: {
+          ":movieId": movieId,
+        },
       })
     );
-    console.log("GetCommand response: ", commandOutput);
-    if (!commandOutput.Item) {
+
+    console.log("QueryCommand response: ", commandOutput);
+
+    if (!commandOutput.Items || commandOutput.Items.length === 0) {
       return {
         statusCode: 404,
         headers: {
           "content-type": "application/json",
         },
-        body: JSON.stringify({ Message: "Invalid movie Id" }),
+        body: JSON.stringify({ Message: "No reviews found for the specified movie" }),
       };
     }
+
     const body = {
-      data: commandOutput.Item,
+      data: commandOutput.Items,
     };
 
-    // Return Response
     return {
       statusCode: 200,
       headers: {
