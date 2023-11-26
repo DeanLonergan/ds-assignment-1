@@ -4,6 +4,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as custom from "aws-cdk-lib/custom-resources";
 import * as apig from "aws-cdk-lib/aws-apigateway";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { generateBatch } from "../shared/util";
@@ -149,6 +150,17 @@ export class RestAPIStack extends cdk.Stack {
       },
     });
 
+    // Translate
+    // const getTranslatedReviewFn = new NodejsFunction(this, "GetTranslatedReviewFn", {
+    //   entry: `${__dirname}/../lambdas/getTranslatedReview.ts`,
+    //   handler: "handler",
+    //   runtime: lambda.Runtime.NODEJS_14_X,
+    //   environment: {
+    //     TABLE_NAME: reviewsTable.tableName,
+    //     REGION: "eu-west-1",
+    //   },
+    // });
+
     new custom.AwsCustomResource(this, "moviesddbInitData", {
       onCreate: {
         service: "DynamoDB",
@@ -171,6 +183,7 @@ export class RestAPIStack extends cdk.Stack {
     moviesTable.grantReadData(getMovieByIdFn)
     moviesTable.grantReadData(getAllMoviesFn)
     moviesTable.grantReadWriteData(newMovieFn)
+//    moviesTable.grantReadData(getTranslatedReviewFn);
 
     // Reviews
     reviewsTable.grantReadData(getReviewsByMovieIdFn)
@@ -214,5 +227,13 @@ export class RestAPIStack extends cdk.Stack {
 
     const generalReviewsEndpoint = api.root.addResource("reviews");
     generalReviewsEndpoint.addMethod("POST", new apig.LambdaIntegration(newReviewFn, { proxy: true }));
+
+    // Translate
+    // const translateReviewEndpoint = reviewByReviewerEndpoint.addResource("translation");
+    // translateReviewEndpoint.addMethod("GET", new apig.LambdaIntegration(getTranslatedReviewFn, {
+    //   requestParameters: {
+    //     "method.request.querystring.language": "method.request.querystring.language",
+    //   },
+    // }));
   }
 }
